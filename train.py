@@ -950,7 +950,8 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                     X = [np.array(b_inputs_img).reshape(batch_size,\
                         cfg.SEQUENCE_LENGTH, cfg.TARGET_H, cfg.TARGET_W, cfg.TARGET_D)]
                     y = np.array(b_labels).reshape(batch_size, 2)
-
+                print("X ",X.shape)
+                print("Y ", y.shape)
                 yield X, y
 
     opt = { 'look_ahead' : look_ahead, 'cfg' : cfg }
@@ -1131,4 +1132,3 @@ if __name__ == "__main__":
         dirs.extend( tub_paths )
 
     multi_train(cfg, dirs, model, transfer, model_type, continuous, aug)
-
