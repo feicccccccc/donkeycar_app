@@ -1,3 +1,4 @@
 # Ignore the data and the model
 data/
 models/
+__pycache__/
