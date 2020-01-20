@@ -602,7 +602,7 @@ def go_train(kl, cfg, train_gen, val_gen, gen_records, model_name, steps_per_epo
 
     if cfg.USE_EARLY_STOP and not continuous:
         callbacks_list.append(early_stop)
-    # TODO: Bug here
+
     history = kl.model.fit_generator(train_gen,
                                      steps_per_epoch=steps_per_epoch,
                                      epochs=epochs,
