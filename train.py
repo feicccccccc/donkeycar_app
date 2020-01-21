@@ -36,7 +36,7 @@ import donkeycar as dk
 from donkeycar.parts.datastore import Tub
 from donkeycar.parts.keras import KerasLinear, KerasIMU, KerasIMU2, \
      KerasCategorical, KerasBehavioral, Keras3D_CNN,\
-     KerasRNN_LSTM, KerasLatent, KerasLocalizer
+     KerasRNN_LSTM, KerasLatent, KerasLocalizer, Keras_IMU_LSTM_Categorical
 from donkeycar.parts.augment import augment_image
 from donkeycar.utils import *
 
@@ -355,6 +355,9 @@ def train(cfg, tub_names, model_name, transfer_model, model_type, continuous, au
                 kl.model.layers[i].trainable = False        
 
     if cfg.OPTIMIZER:
+        # Dont change the optimiser for the model
+        if isinstance(kl, Keras_IMU_LSTM_Categorical):
+            pass
         kl.set_optimizer(cfg.OPTIMIZER, cfg.LEARNING_RATE, cfg.LEARNING_RATE_DECAY)
 
     kl.compile()
@@ -992,7 +995,7 @@ def multi_train(cfg, tub, model, transfer, model_type, continuous, aug):
     choose the right regime for the given model type
     '''
     train_fn = train
-    if model_type in ("rnn",'3d','look_ahead'):
+    if model_type in ("rnn",'3d','look_ahead','rnn_imu'):
         train_fn = sequence_train
 
     train_fn(cfg, tub, model, transfer, model_type, continuous, aug)
