@@ -14,8 +14,8 @@ seq = np.array([i / float(length) for i in range(length)])
 
 print(seq)
 
-X = seq.reshape(1, 5, 1)
-Y = seq.reshape(1, 5)
+X = seq.reshape(len(seq), 1, 1)
+Y = seq.reshape(len(seq), 1)
 
 # Input shape: (batch, time_step, feature)
 # Output shape: (batch, pred)
@@ -35,6 +35,8 @@ print(model.summary())
 # 4 gate: forget gate, update gate & what to update, output gate.
 # each gate have 1. Hidden unit part (hidden * hidden), 2. input part (hidden * output)
 # +1 for bias
+
+# for Dense Layer, the parameters = hidden * output + bias
 
 model.fit(X, Y, epochs=n_epoch, batch_size=n_batch, verbose=2)
 result = model.predict(X, batch_size=n_batch, verbose=0)
