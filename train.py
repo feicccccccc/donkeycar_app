@@ -20,6 +20,7 @@ Options:
 import os
 import glob
 import random
+import sys
 import json
 import time
 import zlib
@@ -880,6 +881,128 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
     # contain every raw value including
     train_data, val_data = train_test_split(sequences, test_size=(1 - cfg.TRAIN_TEST_SPLIT))
 
+    # TODO: problems while training with generator
+    # def generator(data, opt, batch_size=cfg.BATCH_SIZE):
+    #     num_records = len(data)
+    #
+    #     while True:
+    #         # shuffle again for good measure
+    #         random.shuffle(data)
+    #
+    #         for offset in range(0, num_records, batch_size):
+    #             batch_data = data[offset:offset + batch_size]
+    #             # the current batch for training
+    #
+    #             # TODO: Ignore last batch?
+    #             if len(batch_data) != batch_size:
+    #                 break
+    #
+    #             # batch input image
+    #             b_inputs_img = []
+    #             b_vec_in = []
+    #             b_labels = []
+    #             b_vec_out = []
+    #
+    #             b_labels_2 = []
+    #
+    #             for seq in batch_data:
+    #                 inputs_img = []
+    #                 vec_in = []
+    #                 labels = []
+    #                 vec_out = []
+    #                 num_images_target = len(seq)
+    #                 iTargetOutput = -1
+    #                 if opt['look_ahead']:
+    #                     num_images_target = cfg.SEQUENCE_LENGTH
+    #                     iTargetOutput = cfg.SEQUENCE_LENGTH - 1
+    #
+    #                 for iRec, record in enumerate(seq):
+    #                     # get image data if we don't already have it
+    #                     if len(inputs_img) < num_images_target:
+    #                         if record['img_data'] is None:
+    #                             # img data loaded here
+    #                             img_arr = load_scaled_image_arr(record['image_path'], cfg)
+    #                             if img_arr is None:
+    #                                 break
+    #                             if aug:
+    #                                 img_arr = augment_image(img_arr)
+    #
+    #                             if cfg.CACHE_IMAGES:
+    #                                 record['img_data'] = img_arr
+    #                         else:
+    #                             img_arr = record['img_data']
+    #                         # The image array that fit into the network
+    #                         inputs_img.append(img_arr)
+    #
+    #                     if iRec >= iTargetOutput:
+    #                         # What's for?
+    #                         vec_out.append(record['angle'])
+    #                         vec_out.append(record['throttle'])
+    #
+    #                         # Add Imu vector
+    #                         if cfg.model_type == 'rnn_imu':
+    #                             imu_array = []
+    #                             imu_array.append(record['json_data']['imu1/acl_x'])
+    #                             imu_array.append(record['json_data']['imu1/acl_y'])
+    #                             imu_array.append(record['json_data']['imu1/acl_z'])
+    #                             imu_array.append(record['json_data']['imu1/gyr_x'])
+    #                             imu_array.append(record['json_data']['imu1/gyr_y'])
+    #                             imu_array.append(record['json_data']['imu1/gyr_z'])
+    #                             imu_array.append(record['json_data']['imu2/acl_x'])
+    #                             imu_array.append(record['json_data']['imu2/acl_y'])
+    #                             imu_array.append(record['json_data']['imu2/acl_z'])
+    #                             imu_array.append(record['json_data']['imu2/gyr_x'])
+    #                             imu_array.append(record['json_data']['imu2/gyr_y'])
+    #                             imu_array.append(record['json_data']['imu2/gyr_z'])
+    #                             vec_in.append((imu_array))
+    #                     else:
+    #                         vec_in.append(0.0)  # record['angle'])
+    #                         vec_in.append(0.0)  # record['throttle'])
+    #
+    #                 # Label
+    #                 if cfg.model_type == 'rnn_imu':
+    #                     angle = float(record['json_data']['user/angle'])
+    #                     throttle = float(record['json_data']["user/throttle"])
+    #                     label_vec1 = dk.utils.linear_bin(angle)
+    #                     label_vec2 = dk.utils.linear_bin(throttle, N=20, offset=0,
+    #                                                    R=cfg.MODEL_CATEGORICAL_MAX_THROTTLE_RANGE)
+    #                 else:
+    #                     label_vec = seq[iTargetOutput]['target_output']
+    #                 # vec input
+    #
+    #                 if look_ahead:
+    #                     label_vec = np.array(vec_out)
+    #
+    #                 b_inputs_img.append(inputs_img)
+    #                 b_vec_in.append(vec_in)
+    #                 b_labels.append(label_vec1)
+    #                 b_labels_2.append(label_vec2)
+    #
+    #             if look_ahead:
+    #                 X = [np.array(b_inputs_img).reshape(batch_size, \
+    #                                                     cfg.TARGET_H, cfg.TARGET_W, cfg.SEQUENCE_LENGTH)]
+    #                 X.append(np.array(b_vec_in))
+    #                 y = np.array(b_labels).reshape(batch_size, (cfg.SEQUENCE_LENGTH + 1) * 2)
+    #             else:
+    #                 if cfg.model_type == 'rnn_imu':
+    #                     X1 = np.array(b_inputs_img).reshape(batch_size, cfg.SEQUENCE_LENGTH, cfg.TARGET_H, cfg.TARGET_W, cfg.TARGET_D)
+    #                     X2 = np.array(b_vec_in).reshape(batch_size, cfg.SEQUENCE_LENGTH, 12)
+    #                     y1 = np.array(b_labels)
+    #                     y2 = np.array(b_labels_2)
+    #
+    #                 else:
+    #                     X = [np.array(b_inputs_img).reshape(batch_size, cfg.SEQUENCE_LENGTH, cfg.TARGET_H, cfg.TARGET_W, cfg.TARGET_D)]
+    #                     y = np.array(b_labels).reshape(batch_size, 2)
+    #
+    #             #print("X ", X.shape)
+    #             #print("Y ", y.shape)
+    #
+    #             if cfg.model_type == 'rnn_imu':
+    #                 yield [X1,X2], [y1,y2]
+    #             else:
+    #                 yield X, y
+
+    # Trying to reduce the memory foot print of the generator
     def generator(data, opt, batch_size=cfg.BATCH_SIZE):
         num_records = len(data)
 
@@ -992,10 +1115,9 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                         X = [np.array(b_inputs_img).reshape(batch_size, cfg.SEQUENCE_LENGTH, cfg.TARGET_H, cfg.TARGET_W, cfg.TARGET_D)]
                         y = np.array(b_labels).reshape(batch_size, 2)
 
-
-                # TODO: X should be 2 array, need a IMU array append here (128/batch,7/time,12/imudata)
                 #print("X ", X.shape)
                 #print("Y ", y.shape)
+
                 if cfg.model_type == 'rnn_imu':
                     yield [X1,X2], [y1,y2]
                 else:

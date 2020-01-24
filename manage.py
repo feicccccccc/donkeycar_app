@@ -170,24 +170,24 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                          'imu2/gyr_x', 'imu2/gyr_y', 'imu2/gyr_z'], threaded=True)
 
     class TimeSequenceFrames:
-        def __init__(self):
-            """
-            Input to LSTM
-            Return frame dimension (1,7,120,160,4)
-            """
-            def __init__(self, num_states=7):
-                self.rnn_input = None
-                self.num_states = num_states  # Number of States for RNN
+        '''
+        Input to LSTM
+        Return frame dimension (1,7,120,160,4)
+        '''
 
-            def run(self, img):
+        def __init__(self, num_states=7):
+            self.rnn_input = None
+            self.num_states = num_states  # Number of States for RNN
 
-                if self.rnn_input is None:
-                    self.rnn_input = np.stack(([img] * self.num_states), axis=0)
-                else:
-                    img = img.reshape(1, img.shape[0], img.shape[1], img.shape[2])
-                    self.rnn_input = np.append(img, self.rnn_input[:(self.num_states - 1), :, :, :], axis=0)
+        def run(self, img):
 
-                return self.rnn_input
+            if self.rnn_input is None:
+                self.rnn_input = np.stack(([img] * self.num_states), axis=0)
+            else:
+                img = img.reshape(1, img.shape[0], img.shape[1], img.shape[2])
+                self.rnn_input = np.append(img, self.rnn_input[:(self.num_states - 1), :, :, :], axis=0)
+
+            return self.rnn_input
 
     if model_type == "rnn_imu":
         ts_frames = TimeSequenceFrames()
