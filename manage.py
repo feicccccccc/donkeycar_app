@@ -181,6 +181,9 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
         def run(self, img):
 
+            if img is None:
+                return img
+
             if self.rnn_input is None:
                 self.rnn_input = np.stack(([img] * self.num_states), axis=0)
             else:
