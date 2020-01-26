@@ -226,8 +226,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 accel_x1, accel_y1, accel_z1, gyr_x1, gyr_y1, gyr_z1,
                 accel_x2, accel_y2, accel_z2, gyr_x2, gyr_y2, gyr_z2):
 
-            imu_arr = [accel_x1, accel_y1, accel_z1, gyr_x1, gyr_y1, gyr_z1,
-                       accel_x2, accel_y2, accel_z2, gyr_x2, gyr_y2, gyr_z2]
+            imu_arr = np.array([accel_x1, accel_y1, accel_z1, gyr_x1, gyr_y1, gyr_z1,
+                       accel_x2, accel_y2, accel_z2, gyr_x2, gyr_y2, gyr_z2])
 
             if self.rnn_input is None:
                 self.rnn_input = np.stack(([imu_arr] * self.num_states), axis=0)
