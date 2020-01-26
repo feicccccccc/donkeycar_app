@@ -169,7 +169,27 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     v.add(imu2, outputs=['imu2/acl_x', 'imu2/acl_y', 'imu2/acl_z',
                          'imu2/gyr_x', 'imu2/gyr_y', 'imu2/gyr_z'], threaded=True)
 
-    class TimeSequenceFrames:
+    class ImgPreProcess():
+        """
+        preprocess camera image for inference.
+        normalize and crop if needed.
+        """
+
+        def __init__(self, cfg):
+            self.cfg = cfg
+
+        def run(self, img_arr):
+            return normalize_and_crop(img_arr, self.cfg)
+
+    # inference input, Normalised and cropped with ROI
+    inf_input = 'cam/normalized/cropped'
+    v.add(ImgPreProcess(cfg),
+          inputs=['cam/image_array'],
+          outputs=[inf_input],
+          run_condition='run_pilot')
+
+
+    class TimeSequenceFrames_img:
         '''
         Input to LSTM
         Return frame dimension (1,7,120,160,4)
@@ -192,41 +212,51 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
             return self.rnn_input
 
+    class TimeSequenceFrames_imu:
+        '''
+        Input to LSTM
+        Return frame dimension (1,7,12)
+        '''
+
+        def __init__(self, num_states=7):
+            self.rnn_input = None
+            self.num_states = num_states  # Number of States for RNN
+
+        def run(self,
+                accel_x1, accel_y1, accel_z1, gyr_x1, gyr_y1, gyr_z1,
+                accel_x2, accel_y2, accel_z2, gyr_x2, gyr_y2, gyr_z2):
+
+            imu_arr = [accel_x1, accel_y1, accel_z1, gyr_x1, gyr_y1, gyr_z1,
+                       accel_x2, accel_y2, accel_z2, gyr_x2, gyr_y2, gyr_z2]
+
+            if self.rnn_input is None:
+                self.rnn_input = np.stack(([imu_arr] * self.num_states), axis=0)
+            else:
+                imu_arr = imu_arr.reshape(1, imu_arr.shape[0])
+                self.rnn_input = np.append(self.rnn_input[:(self.num_states - 1),imu_arr], axis=0)
+
+            return self.rnn_input
+
     if model_type == "rnn_imu":
-        ts_frames = TimeSequenceFrames()
-        v.add(ts_frames, inputs=['cam/image_array'], outputs=['cam/ts_frames'])
-
-
-
-    class ImgPreProcess():
-        """
-        preprocess camera image for inference.
-        normalize and crop if needed.
-        """
-
-        def __init__(self, cfg):
-            self.cfg = cfg
-
-        def run(self, img_arr):
-            return normalize_and_crop(img_arr, self.cfg)
-
-    # inference input, Normalised and cropped with ROI
-    inf_input = 'cam/normalized/cropped'
-    v.add(ImgPreProcess(cfg),
-          inputs=['cam/image_array'],
-          outputs=[inf_input],
-          run_condition='run_pilot')
+        img_ts_frames = TimeSequenceFrames_img()
+        v.add(img_ts_frames, inputs=['cam/normalized/cropped'], outputs=['cam/ts_frames'])
+        imu_ts_frames = TimeSequenceFrames_imu()
+        v.add(imu_ts_frames, inputs=['imu1/acl_x', 'imu1/acl_y', 'imu1/acl_z',
+                                     'imu1/gyr_x', 'imu1/gyr_y', 'imu1/gyr_z',
+                                     'imu2/acl_x', 'imu2/acl_y', 'imu2/acl_z',
+                                     'imu2/gyr_x', 'imu2/gyr_y', 'imu2/gyr_z'],
+              outputs=['imu/ts_frames'])
 
     # For the AI part
-
-    if model_type == "rnn_imu":
-        inf_input = "cam/ts_frames"
 
     inputs = [inf_input,
               'imu1/acl_x', 'imu1/acl_y', 'imu1/acl_z',
               'imu1/gyr_x', 'imu1/gyr_y', 'imu1/gyr_z',
               'imu2/acl_x', 'imu2/acl_y', 'imu2/acl_z',
               'imu2/gyr_x', 'imu2/gyr_y', 'imu2/gyr_z']
+
+    if model_type == "rnn_imu":
+        inputs = ['cam/ts_frames', 'imu/ts_frame']
 
     def load_model(kl, model_path):
         start = time.time()
