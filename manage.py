@@ -258,7 +258,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
               'imu2/gyr_x', 'imu2/gyr_y', 'imu2/gyr_z']
 
     if model_type == "rnn_imu":
-        inputs = ['cam/ts_frames', 'imu/ts_frame']
+        inputs = ['cam/ts_frames', 'imu/ts_frames']
 
     def load_model(kl, model_path):
         start = time.time()
