@@ -4,3 +4,4 @@ models/
 __pycache__/
 data_sample/
 sync
+.DS_Store
