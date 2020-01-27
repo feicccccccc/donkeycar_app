@@ -13,6 +13,8 @@ Options:
     -f --file=<file>   A text file containing paths to tub files, one per line. Option may be used more than once.
     --meta=<key:value> Key/Value strings describing describing a piece of meta data about this drive. Option may be used more than once.
 """
+
+# LOG: LSTM_imu model hardcoded part: bin parameters in input and output of keras part
 import os
 import time
 
@@ -209,7 +211,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             else:
                 img = img.reshape(1, img.shape[0], img.shape[1], img.shape[2])
                 self.rnn_input = np.append(self.rnn_input[1:self.num_states,:, :, :],img , axis=0)
-            print("img_seq: {}".format(self.rnn_input))
+            #print("img_seq: {}".format(self.rnn_input))
 
             return self.rnn_input
 

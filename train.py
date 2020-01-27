@@ -822,6 +822,11 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
     print('collating records')
     gen_records = {}
 
+    max_angle = -100
+    min_angle = 100
+    max_throttle = -100
+    min_throttle = 100
+
     # record contain all record_path in str
     for record_path in records:
         with open(record_path, 'r') as fp:
@@ -838,6 +843,15 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
         angle = float(json_data['user/angle'])
         throttle = float(json_data["user/throttle"])
 
+        if angle > max_angle:
+            max_angle = angle
+        if angle < min_angle:
+            min_angle = angle
+        if throttle > max_throttle:
+            max_throttle = throttle
+        if throttle < min_throttle:
+            min_throttle = throttle
+
         sample['target_output'] = np.array([angle, throttle])
         sample['angle'] = angle
         sample['throttle'] = throttle
@@ -849,6 +863,8 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
         gen_records[key] = sample
 
     print('collating sequences')
+    print("Min/max Angle: {} , {} ".format(min_angle,max_angle))
+    print("Min/max throttle: {} , {} ".format(min_throttle, max_throttle))
 
     sequences = []
 
@@ -1084,6 +1100,7 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                     if cfg.model_type == 'rnn_imu':
                         angle = float(record['json_data']['user/angle'])
                         throttle = float(record['json_data']["user/throttle"])
+                        # Warning: this is not universal and need to be change manually
                         label_vec1 = dk.utils.linear_bin(angle)
                         label_vec2 = dk.utils.linear_bin(throttle, N=20, offset=0,
                                                        R=cfg.MODEL_CATEGORICAL_MAX_THROTTLE_RANGE)
