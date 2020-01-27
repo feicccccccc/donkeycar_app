@@ -233,7 +233,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 self.rnn_input = np.stack(([imu_arr] * self.num_states), axis=0)
             else:
                 imu_arr = imu_arr.reshape(1, imu_arr.shape[0])
-                self.rnn_input = np.append(self.rnn_input[:(self.num_states - 1),imu_arr], axis=0)
+                self.rnn_input = np.append(self.rnn_input[:(self.num_states - 1)],imu_arr, axis=0)
 
             return self.rnn_input
 
