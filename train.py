@@ -980,7 +980,7 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                         angle = float(record['json_data']['user/angle'])
                         throttle = float(record['json_data']["user/throttle"])
                         # Warning: this is not universal and need to be change manually
-                        label_vec1 = dk.utils.linear_bin(angle)
+                        label_vec1 = dk.utils.linear_bin(angle, N=31, offset = 1, R=2)
                         label_vec2 = dk.utils.linear_bin(throttle, N=31, offset=0,
                                                        R=cfg.MODEL_CATEGORICAL_MAX_THROTTLE_RANGE)
                     elif cfg.model_type == 'rnn_imu_linear':
