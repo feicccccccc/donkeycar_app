@@ -6,6 +6,7 @@ import sys
 
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Dense, Activation, LSTM, Dropout, RepeatVector, TimeDistributed
+from tensorflow.python.keras.layers import CuDNNLSTM
 
 EPOCHS = 10
 

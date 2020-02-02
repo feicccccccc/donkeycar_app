@@ -241,7 +241,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             #print("imu_seq: {}".format(self.rnn_input)) 
             return self.rnn_input
 
-    if model_type == "rnn_imu" or model_type == 'rnn_imu_linear' or model_type == 'rnn_imu_many2many':
+    if model_type == "rnn_imu" or model_type == 'rnn_imu_linear' or model_type == 'rnn_imu_many2many' or model_type == 'rnn_imu_many2many_imupred':
         img_ts_frames = TimeSequenceFrames_img()
         v.add(img_ts_frames, inputs=['cam/normalized/cropped'], outputs=['cam/ts_frames'])
         imu_ts_frames = TimeSequenceFrames_imu()
@@ -259,7 +259,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
               'imu2/acl_x', 'imu2/acl_y', 'imu2/acl_z',
               'imu2/gyr_x', 'imu2/gyr_y', 'imu2/gyr_z']
 
-    if model_type == "rnn_imu" or model_type == "rnn_imu_linear" or model_type == 'rnn_imu_many2many':
+    if model_type == "rnn_imu" or model_type == "rnn_imu_linear" or model_type == 'rnn_imu_many2many' or model_type == 'rnn_imu_many2many_imupred':
         inputs = ['cam/ts_frames', 'imu/ts_frames']
 
     def load_model(kl, model_path):
