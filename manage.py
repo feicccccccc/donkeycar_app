@@ -241,17 +241,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             #print("imu_seq: {}".format(self.rnn_input)) 
             return self.rnn_input
 
-    if model_type == "rnn_imu" or model_type == 'rnn_imu_linear' or model_type == 'rnn_imu_many2many' or model_type == 'rnn_imu_many2many_imupred':
-        img_ts_frames = TimeSequenceFrames_img()
-        v.add(img_ts_frames, inputs=['cam/normalized/cropped'], outputs=['cam/ts_frames'])
-        imu_ts_frames = TimeSequenceFrames_imu()
-        v.add(imu_ts_frames, inputs=['imu1/acl_x', 'imu1/acl_y', 'imu1/acl_z',
-                                     'imu1/gyr_x', 'imu1/gyr_y', 'imu1/gyr_z',
-                                     'imu2/acl_x', 'imu2/acl_y', 'imu2/acl_z',
-                                     'imu2/gyr_x', 'imu2/gyr_y', 'imu2/gyr_z'],
-              outputs=['imu/ts_frames'])
-
-    # For the AI part
+    # model input
 
     inputs = [inf_input,
               'imu1/acl_x', 'imu1/acl_y', 'imu1/acl_z',
@@ -259,7 +249,21 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
               'imu2/acl_x', 'imu2/acl_y', 'imu2/acl_z',
               'imu2/gyr_x', 'imu2/gyr_y', 'imu2/gyr_z']
 
-    if model_type == "rnn_imu" or model_type == "rnn_imu_linear" or model_type == 'rnn_imu_many2many' or model_type == 'rnn_imu_many2many_imupred':
+    if model_type == "rnn_imu" or \
+            model_type == 'rnn_imu_linear' or \
+            model_type == 'rnn_imu_many2many' or \
+            model_type == 'rnn_imu_many2many_imupred':
+
+        img_ts_frames = TimeSequenceFrames_img()
+        v.add(img_ts_frames, inputs=['cam/normalized/cropped'], outputs=['cam/ts_frames'])
+        imu_ts_frames = TimeSequenceFrames_imu()
+        v.add(imu_ts_frames,
+              inputs=['imu1/acl_x', 'imu1/acl_y', 'imu1/acl_z',
+                      'imu1/gyr_x', 'imu1/gyr_y', 'imu1/gyr_z',
+                      'imu2/acl_x', 'imu2/acl_y', 'imu2/acl_z',
+                      'imu2/gyr_x', 'imu2/gyr_y', 'imu2/gyr_z'],
+              outputs=['imu/ts_frames'])
+
         inputs = ['cam/ts_frames', 'imu/ts_frames']
 
     def load_model(kl, model_path):
@@ -291,7 +295,6 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             print(e)
             print("ERR>> problems loading model json", json_fnm)
 
-    # TODO: need to fix model_path and AI Part
     if model_path:
         # When we have a model, first create an appropriate Keras part
         kl = dk.utils.get_model_by_type(model_type, cfg)

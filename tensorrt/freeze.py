@@ -7,7 +7,7 @@ from tensorflow.keras.models import load_model
 tf.keras.backend.clear_session()
 
 save_pb_dir = './model'
-model_fname = '../models/rnn_imu_2.h5'
+model_fname = '../models/rnn_imu_c.h5'
 def freeze_graph(graph, session, output, save_pb_dir='.', save_pb_name='frozen_model.pb', save_pb_as_text=False):
     with graph.as_default():
         graphdef_inf = tf.graph_util.remove_training_nodes(graph.as_graph_def())
