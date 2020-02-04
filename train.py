@@ -732,7 +732,7 @@ def go_train(kl, cfg, train_gen, val_gen, gen_records, model_name, steps_per_epo
         print('Target channels of {0} remaining with {1:.00%} percent removal per iteration'.format(target_channels,
                                                                                                     cfg.PRUNE_PERCENT_PER_ITERATION / 100))
 
-        from keras.models import load_model
+        from keras.models import load_mod
         prune_loss = 0
         while cnn_channels > target_channels:
             save_best.reset_best()

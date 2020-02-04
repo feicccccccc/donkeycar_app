@@ -130,7 +130,7 @@ CONTROLLER_TYPE='ps4'               #(ps3|ps4|xbox|nimbus|wiiu|F710|rc3)
 MODEL_CATEGORICAL_MAX_THROTTLE_RANGE = 0.4
 # 
 # #RNN or 3D
-SEQUENCE_LENGTH = 7             #some models use a number of images over time. This controls how many.
+SEQUENCE_LENGTH = 5             #some models use a number of images over time. This controls how many.
 # 
 # #IMU
 # HAVE_IMU = False                #when true, this add a Mpu6050 part and records the data. Can be used with a 

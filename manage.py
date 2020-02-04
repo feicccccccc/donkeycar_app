@@ -255,9 +255,9 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             model_type == 'rnn_imu_many2many_imupred' or \
             model_tpye == "test":
 
-        img_ts_frames = TimeSequenceFrames_img()
+        img_ts_frames = TimeSequenceFrames_img(num_states=cfg.SEQUENCE_LENGTH)
         v.add(img_ts_frames, inputs=['cam/normalized/cropped'], outputs=['cam/ts_frames'])
-        imu_ts_frames = TimeSequenceFrames_imu()
+        imu_ts_frames = TimeSequenceFrames_imu(num_states=cfg.SEQUENCE_LENGTH)
         v.add(imu_ts_frames,
               inputs=['imu1/acl_x', 'imu1/acl_y', 'imu1/acl_z',
                       'imu1/gyr_x', 'imu1/gyr_y', 'imu1/gyr_z',
