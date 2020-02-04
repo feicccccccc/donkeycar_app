@@ -967,7 +967,8 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                             if cfg.model_type == 'rnn_imu' or \
                                     cfg.model_type == 'rnn_imu_linear' or \
                                     cfg.model_type == 'rnn_imu_many2many' or \
-                                    cfg.model_type == 'rnn_imu_many2many_imupred':
+                                    cfg.model_type == 'rnn_imu_many2many_imupred' or \
+                                    cfg.model_type == 'test':
 
                                 imu_array = []
                                 imu_array.append(record['json_data']['imu1/acl_x'])
@@ -1032,7 +1033,7 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                             #vec_in.append(0.0)  # record['throttle'])
 
                     # Label
-                    if cfg.model_type == 'rnn_imu':
+                    if cfg.model_type == 'rnn_imu' or cfg.model_type == 'test':
                         angle = float(record['json_data']['user/angle'])
                         throttle = float(record['json_data']["user/throttle"])
                         # Warning: this is not universal and need to be change manually
@@ -1051,6 +1052,9 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
 
                     if look_ahead:
                         label_vec = np.array(vec_out)
+
+                    if cfg.model_type == 'test':
+                        inputs_img = inputs_img[0]
 
                     b_inputs_img.append(inputs_img)
                     b_vec_in.append(vec_in)
@@ -1086,6 +1090,13 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                     y2 = np.array(b_labels_2)
                     y3 = np.array(b_labels_3)
 
+                elif cfg.model_type == 'test':
+                    X1 = np.array(b_inputs_img).reshape(batch_size, cfg.TARGET_H, cfg.TARGET_W,
+                                                        cfg.TARGET_D)
+                    X2 = np.array(b_vec_in).reshape(batch_size, cfg.SEQUENCE_LENGTH, 12)
+                    y1 = np.array(b_labels)
+                    y2 = np.array(b_labels_2)
+
                 else:
                     X = [np.array(b_inputs_img).reshape(batch_size, cfg.SEQUENCE_LENGTH, cfg.TARGET_H, cfg.TARGET_W, cfg.TARGET_D)]
                     y = np.array(b_labels).reshape(batch_size, 2)
@@ -1095,7 +1106,7 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
 
                 if cfg.model_type == 'rnn_imu' or \
                    cfg.model_type == 'rnn_imu_linear' or \
-                   cfg.model_type == 'rnn_imu_many2many':
+                   cfg.model_type == 'rnn_imu_many2many' or cfg.model_type == 'test':
                     yield [X1,X2], [y1,y2]
                 elif cfg.model_type == 'rnn_imu_many2many_imupred':
                     yield [X1, X2], [y1, y2, y3]
@@ -1141,7 +1152,7 @@ def multi_train(cfg, tub, model, transfer, model_type, continuous, aug):
     choose the right regime for the given model type
     '''
     train_fn = train
-    if model_type in ("rnn", '3d', 'look_ahead', 'rnn_imu', 'rnn_imu_linear', 'rnn_imu_many2many', 'rnn_imu_many2many_imupred'):
+    if model_type in ("rnn", '3d', 'look_ahead', 'rnn_imu', 'rnn_imu_linear', 'rnn_imu_many2many', 'rnn_imu_many2many_imupred', 'test'):
         train_fn = sequence_train
 
     train_fn(cfg, tub, model, transfer, model_type, continuous, aug)

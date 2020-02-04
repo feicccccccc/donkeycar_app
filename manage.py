@@ -252,7 +252,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     if model_type == "rnn_imu" or \
             model_type == 'rnn_imu_linear' or \
             model_type == 'rnn_imu_many2many' or \
-            model_type == 'rnn_imu_many2many_imupred':
+            model_type == 'rnn_imu_many2many_imupred' or \
+            model_tpye == "test":
 
         img_ts_frames = TimeSequenceFrames_img()
         v.add(img_ts_frames, inputs=['cam/normalized/cropped'], outputs=['cam/ts_frames'])
