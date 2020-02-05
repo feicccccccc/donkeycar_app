@@ -1054,7 +1054,7 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                         label_vec = np.array(vec_out)
 
                     if cfg.model_type == 'test':
-                        inputs_img = inputs_img[0]
+                        inputs_img = inputs_img
 
                     b_inputs_img.append(inputs_img)
                     b_vec_in.append(vec_in)
@@ -1091,7 +1091,7 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                     y3 = np.array(b_labels_3)
 
                 elif cfg.model_type == 'test':
-                    X1 = np.array(b_inputs_img).reshape(batch_size, cfg.TARGET_H, cfg.TARGET_W,
+                    X1 = np.array(b_inputs_img).reshape(batch_size, cfg.SEQUENCE_LENGTH, cfg.TARGET_H, cfg.TARGET_W,
                                                         cfg.TARGET_D)
                     X2 = np.array(b_vec_in).reshape(batch_size, cfg.SEQUENCE_LENGTH, 12)
                     y1 = np.array(b_labels)
