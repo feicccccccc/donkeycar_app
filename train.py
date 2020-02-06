@@ -881,7 +881,8 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
         look_ahead = True
 
     elif model_type == "rnn_imu_many2many" or model_type == "rnn_imu_many2many_imupred":
-        target_len = 12
+        # TODO: Add future step length
+        target_len = 5+3
         look_ahead = True
 
     for k, sample in gen_records.items():
@@ -943,6 +944,7 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                     if opt['look_ahead']:
                         num_images_target = cfg.SEQUENCE_LENGTH
                         # output count
+                        # future prediction start after
                         iTargetOutput = cfg.SEQUENCE_LENGTH
 
                     for iRec, record in enumerate(seq):
