@@ -275,6 +275,25 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             print("throttle: {}".format(self.rnn_input_throttle.shape))
             return self.rnn_input
 
+    class Last_output:
+        '''for saving last throttle and angle output'''
+
+        def __init__(self):
+            self.last_angle = None
+            self.last_throttle = None
+            self.save_flag = True
+
+
+        def run(self, angle, throttle):
+            if self.save_flag:
+                self.last_angle = angle
+                self.last_throttle = throttle
+                self.save_flag = False
+            else:
+                save_flag = True
+                return self.last_angle, self.last_throttle
+
+
     # model input
 
     inputs = [inf_input,
@@ -302,8 +321,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         inputs = ['cam/ts_frames', 'imu/ts_frames']
 
     if model_type == "test":
+        last_output = Last_output()
+        v.add(last_output, inputs=['user/angle', 'user/throttle'], outputs=['pre/angle', 'pre/throttle'])
         control_ts_frame = TimeSequenceFrames_prev_input(num_states=cfg.SEQUENCE_LENGTH)
-        v.add(control_ts_frame, inputs=['pilot/angle', 'pilot/throttle'], outputs=['pilot/angle_frames', 'pilot/throttle_frames'])
+        v.add(control_ts_frame, inputs=['pre/angle', 'pre/throttle'], outputs=['pilot/angle_frames', 'pilot/throttle_frames'])
         inputs = ['cam/ts_frames', 'imu/ts_frames', 'pilot/angle_frames', 'pilot/throttle_frames']
 
 
