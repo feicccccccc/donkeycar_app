@@ -880,7 +880,7 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
         target_len = cfg.SEQUENCE_LENGTH * 2
         look_ahead = True
 
-    elif model_type == "rnn_imu_many2many" or model_type == "rnn_imu_many2many_imupred":
+    elif model_type == "rnn_imu_many2many" or model_type == "rnn_imu_many2many_imupred" or model_type == 'test':
         # TODO: Add future step length
         target_len = 5+3
         look_ahead = True
@@ -927,6 +927,8 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                 b_inputs_img = []
                 b_vec_in = []
                 b_vec_out = []
+                b_steer_in = []
+                b_throttle_in = []
                 b_labels = []
                 b_labels_2 = []
                 b_labels_3 = []
@@ -934,6 +936,8 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                 for seq in batch_data:
                     inputs_img = []
                     vec_in = []
+                    steer_in = []
+                    throttle_in = []
                     vec_out = []
                     label_vec1 = []
                     label_vec2 = []
@@ -987,6 +991,10 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                                 imu_array.append(record['json_data']['imu2/gyr_z'])
                                 vec_in.append((imu_array))
 
+                            if cfg.model_type == 'test':
+                                steer_in.append(record['json_data']['user/angle'])
+                                throttle_in.append(record['json_data']["user/throttle"])
+
                         if iRec >= iTargetOutput:
                             # for future prediction
                             if cfg.model_type == 'rnn_imu_many2many':
@@ -1024,6 +1032,24 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                                 label_vec2.append(throttle)
                                 label_vec3.append(imu_array)
 
+                            elif cfg.model_type == 'test':
+
+                                angle = float(record['json_data']['user/angle'])
+                                throttle = float(record['json_data']["user/throttle"])
+
+                                angle = dk.utils.linear_bin(angle,
+                                                            N=31,
+                                                            offset=1,
+                                                            R=2)
+
+                                throttle = dk.utils.linear_bin(throttle,
+                                                               N=31,
+                                                               offset=0,
+                                                               R=cfg.MODEL_CATEGORICAL_MAX_THROTTLE_RANGE)
+                                label_vec1.append(angle)
+                                label_vec2.append(throttle)
+                                label_vec3.append(imu_array)
+
                             else:
                                 vec_out.append(record['angle'])
                                 vec_out.append(record['throttle'])
@@ -1035,7 +1061,7 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                             #vec_in.append(0.0)  # record['throttle'])
 
                     # Label
-                    if cfg.model_type == 'rnn_imu' or cfg.model_type == 'test':
+                    if cfg.model_type == 'rnn_imu':
                         angle = float(record['json_data']['user/angle'])
                         throttle = float(record['json_data']["user/throttle"])
                         # Warning: this is not universal and need to be change manually
@@ -1060,10 +1086,15 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
 
                     b_inputs_img.append(inputs_img)
                     b_vec_in.append(vec_in)
+                    b_steer_in.append(steer_in)
+                    b_throttle_in.append(throttle_in)
+
                     b_labels.append(label_vec1)
                     b_labels_2.append(label_vec2)
 
                     if cfg.model_type == 'rnn_imu_many2many_imupred':
+                        b_labels_3.append(label_vec3)
+                    if cfg.model_type == 'test':
                         b_labels_3.append(label_vec3)
 
                 if cfg.model_type == 'look_ahead':
@@ -1096,8 +1127,12 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
                     X1 = np.array(b_inputs_img).reshape(batch_size, cfg.SEQUENCE_LENGTH, cfg.TARGET_H, cfg.TARGET_W,
                                                         cfg.TARGET_D)
                     X2 = np.array(b_vec_in).reshape(batch_size, cfg.SEQUENCE_LENGTH, 12)
+                    X3 = np.array(b_steer_in).reshape(batch_size, cfg.SEQUENCE_LENGTH, 1)
+                    X4 = np.array(b_throttle_in).reshape(batch_size, cfg.SEQUENCE_LENGTH, 1)
+
                     y1 = np.array(b_labels)
                     y2 = np.array(b_labels_2)
+                    y3 = np.array(b_labels_3)
 
                 else:
                     X = [np.array(b_inputs_img).reshape(batch_size, cfg.SEQUENCE_LENGTH, cfg.TARGET_H, cfg.TARGET_W, cfg.TARGET_D)]
@@ -1108,10 +1143,12 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
 
                 if cfg.model_type == 'rnn_imu' or \
                    cfg.model_type == 'rnn_imu_linear' or \
-                   cfg.model_type == 'rnn_imu_many2many' or cfg.model_type == 'test':
+                   cfg.model_type == 'rnn_imu_many2many':
                     yield [X1,X2], [y1,y2]
                 elif cfg.model_type == 'rnn_imu_many2many_imupred':
                     yield [X1, X2], [y1, y2, y3]
+                elif cfg.model_type == 'test':
+                    yield [X1,X2,X3,X4], [y1,y2,y3]
                 else:
                     yield X, y
 

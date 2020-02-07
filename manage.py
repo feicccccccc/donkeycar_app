@@ -241,6 +241,32 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             #print("imu_seq: {}".format(self.rnn_input)) 
             return self.rnn_input
 
+    class TimeSequenceFrames_prev_input:
+        '''
+        Input to LSTM
+        Return frame dimension (1,5,2)
+        '''
+
+        def __init__(self, num_states=5):
+            self.rnn_input = None
+            self.num_states = num_states  # Number of States for RNN
+
+        def run(self,
+                accel_x1, accel_y1, accel_z1, gyr_x1, gyr_y1, gyr_z1,
+                accel_x2, accel_y2, accel_z2, gyr_x2, gyr_y2, gyr_z2):
+
+            imu_arr = np.array([accel_x1, accel_y1, accel_z1, gyr_x1, gyr_y1, gyr_z1,
+                                accel_x2, accel_y2, accel_z2, gyr_x2, gyr_y2, gyr_z2])
+
+            if self.rnn_input is None:
+                self.rnn_input = np.stack(([imu_arr] * self.num_states), axis=0)
+            else:
+                imu_arr = imu_arr.reshape(1, imu_arr.shape[0])
+                self.rnn_input = np.append(self.rnn_input[1:self.num_states], imu_arr, axis=0)
+
+            # print("imu_seq: {}".format(self.rnn_input))
+            return self.rnn_input
+
     # model input
 
     inputs = [inf_input,
@@ -253,7 +279,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             model_type == 'rnn_imu_linear' or \
             model_type == 'rnn_imu_many2many' or \
             model_type == 'rnn_imu_many2many_imupred' or \
-            model_tpye == "test":
+            model_type == "test":
 
         img_ts_frames = TimeSequenceFrames_img(num_states=cfg.SEQUENCE_LENGTH)
         v.add(img_ts_frames, inputs=['cam/normalized/cropped'], outputs=['cam/ts_frames'])
@@ -266,6 +292,12 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
               outputs=['imu/ts_frames'])
 
         inputs = ['cam/ts_frames', 'imu/ts_frames']
+
+    if model_type == "test":
+        control_ts_frame = TimeSequenceFrames_prev_input(num_states=cfg.SEQUENCE_LENGTH)
+        v.add(control_ts_frame, inputs=['pilot/angle', 'pilot/throttle'], outputs=['pilot/angle_frames', 'pilot/throttle_frames'])
+        inputs = ['cam/ts_frames', 'imu/ts_frames', 'pilot/angle_frames', 'pilot/throttle_frames']
+
 
     def load_model(kl, model_path):
         start = time.time()
