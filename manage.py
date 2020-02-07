@@ -286,8 +286,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
         def run(self, angle, throttle):
             if self.save_flag:
-                self.last_angle = angle
-                self.last_throttle = throttle
+                self.last_angle = 0 if angle is None else angle
+                self.last_throttle = 0 if throttle is None else throttlef
                 self.save_flag = False
             else:
                 save_flag = True
