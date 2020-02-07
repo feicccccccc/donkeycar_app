@@ -279,8 +279,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         '''for saving last throttle and angle output'''
 
         def __init__(self):
-            self.last_angle = None
-            self.last_throttle = None
+            self.last_angle = 0
+            self.last_throttle = 0
             self.save_flag = True
 
 
@@ -322,7 +322,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
     if model_type == "test":
         last_output = Last_output()
-        v.add(last_output, inputs=['user/angle', 'user/throttle'], outputs=['pre/angle', 'pre/throttle'])
+        v.add(last_output, inputs=['user/angle', 'user/throttle'], outputs=['pre/angle', 'pre/throttle'],run_condition='run_pilot')
         control_ts_frame = TimeSequenceFrames_prev_input(num_states=cfg.SEQUENCE_LENGTH)
         v.add(control_ts_frame, inputs=['pre/angle', 'pre/throttle'], outputs=['pilot/angle_frames', 'pilot/throttle_frames'])
         inputs = ['cam/ts_frames', 'imu/ts_frames', 'pilot/angle_frames', 'pilot/throttle_frames']
@@ -407,6 +407,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         v.add(kl, inputs=inputs,
               outputs=outputs,
               run_condition='run_pilot')
+
+        v.add(last_output, inputs=['pilot/angle', 'pilot/throttle'], outputs=['pre/angle', 'pre/throttle'],run_condition='run_pilot')
 
         # Choose what inputs should change the car.
 
