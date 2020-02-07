@@ -248,23 +248,31 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         '''
 
         def __init__(self, num_states=5):
-            self.rnn_input = None
+            self.rnn_input_angle = None
+            self.rnn_input_throttle = None
             self.num_states = num_states  # Number of States for RNN
 
-        def run(self,
-                accel_x1, accel_y1, accel_z1, gyr_x1, gyr_y1, gyr_z1,
-                accel_x2, accel_y2, accel_z2, gyr_x2, gyr_y2, gyr_z2):
+        def run(self, angle, throttle):
 
-            imu_arr = np.array([accel_x1, accel_y1, accel_z1, gyr_x1, gyr_y1, gyr_z1,
-                                accel_x2, accel_y2, accel_z2, gyr_x2, gyr_y2, gyr_z2])
+            angle = dk.utils.linear_bin(angle,
+                                        N=31,
+                                        offset=1,
+                                        R=2)
 
-            if self.rnn_input is None:
-                self.rnn_input = np.stack(([imu_arr] * self.num_states), axis=0)
+            throttle = dk.utils.linear_bin(throttle,
+                                           N=31,
+                                           offset=0,
+                                           R=cfg.MODEL_CATEGORICAL_MAX_THROTTLE_RANGE)
+
+            if self.rnn_input_angle is None or self.rnn_input_throttle is None:
+                self.rnn_input_angle = np.stack(([angle] * self.num_states), axis=0)
+                self.rnn_input_throttle = np.stack(([throttle] * self.num_states), axis=0)
             else:
-                imu_arr = imu_arr.reshape(1, imu_arr.shape[0])
-                self.rnn_input = np.append(self.rnn_input[1:self.num_states], imu_arr, axis=0)
+                self.rnn_input_angle = np.append(self.rnn_input_angle[1:self.num_states], angle, axis=0)
+                self.rnn_input_throttle = np.append(self.rnn_input_throttle[1:self.num_states], angle, axis=0)
 
-            # print("imu_seq: {}".format(self.rnn_input))
+            print("angle: {}".format(self.rnn_input_angle.shape))
+            print("throttle: {}".format(self.rnn_input_throttle.shape))
             return self.rnn_input
 
     # model input
